@@ -1,0 +1,189 @@
+clear all;
+settings = init_settings();
+beam_Centrals = init_beam_central(settings);
+users = init_user_positions(settings, beam_Centrals);
+
+figure;
+hold on;
+Legend_str = cell(1,settings.num_of_Antenna+settings.num_of_Beams);
+for n = 1:settings.num_of_Antenna
+    theta = 0:0.5:360;
+    edge_Coordinates = beam_Centrals(n,:) + [settings.cell_Radius * cosd(theta);settings.cell_Radius * sind(theta)]';
+    plot(edge_Coordinates(:,1),edge_Coordinates(:,2),'LineWidth',2);
+    Legend_str{n}=['Antenna',num2str(n)];
+end
+%legend (antenna_Legend_str,'location','best');
+for k = 1:settings.num_of_Beams
+   x = users.positions(:,2*k-1);
+   y = users.positions(:,2*k);
+   scatter(x,y,75,'filled');
+   Legend_str{k+settings.num_of_Antenna} = ['Beam',num2str(k)];
+end
+legend (Legend_str,'location','best');
+
+users = cal_distance_to_satellite(users,settings);
+users = cal_angle_to_cell_centre(users,settings, beam_Centrals);
+channel_Matrix = init_channel_matrix(users , settings);
+result = [];
+result1 = [];
+result2 = [];
+for num_of_Users = 1:settings.users_per_Beam
+   H = [];
+   for k = 1:settings.num_of_Beams
+   
+       H = [H,channel_Matrix(1:settings.num_of_Antenna,settings.users_per_Beam*(k-1)+1:settings.users_per_Beam*(k-1)+(num_of_Users))];
+   end
+   result_temp = optimization_outage(H,settings,num_of_Users);
+   result = [result,result_temp];
+end
+
+settings.phase_Error_Standard_Deviation = 10;
+for num_of_Users = 1:settings.users_per_Beam
+   H = [];
+   for k = 1:settings.num_of_Beams
+   
+       H = [H,channel_Matrix(1:settings.num_of_Antenna,settings.users_per_Beam*(k-1)+1:settings.users_per_Beam*(k-1)+(num_of_Users))];
+   end
+   result_temp = optimization_outage(H,settings,num_of_Users);
+   result1 = [result1,result_temp];
+end
+
+settings.phase_Error_Standard_Deviation = 15;
+for num_of_Users = 1:settings.users_per_Beam
+   H = [];
+   for k = 1:settings.num_of_Beams
+   
+       H = [H,channel_Matrix(1:settings.num_of_Antenna,settings.users_per_Beam*(k-1)+1:settings.users_per_Beam*(k-1)+(num_of_Users))];
+   end
+   result_temp = optimization_outage(H,settings,num_of_Users);
+   result2 = [result2,result_temp];
+end
+users_per_Beam = 1:settings.users_per_Beam;
+mean_sum_rate = [];
+mean_sum_rate1 = [];
+mean_sum_rate2 = [];
+utility = [];
+sum_rate = [];
+utility1 = [];
+sum_rate1 = [];
+utility2 = [];
+sum_rate2 = [];
+for i = users_per_Beam
+   utility = [utility , result(i).utility];
+   sum_rate = [sum_rate , result(i).sum_Rate];
+   mean_sum_rate = [mean_sum_rate , mean(result(i).data_Rate)];
+   utility1 = [utility1 , result1(i).utility];
+   sum_rate1 = [sum_rate1 , result1(i).sum_Rate];
+   mean_sum_rate1 = [mean_sum_rate1 , mean(result1(i).data_Rate)];
+   utility2 = [utility2 , result2(i).utility];
+   sum_rate2 = [sum_rate2 , result2(i).sum_Rate];
+   mean_sum_rate2 = [mean_sum_rate2 , mean(result2(i).data_Rate)];
+end
+figure;
+hold on;
+plot(users_per_Beam , utility);
+plot(users_per_Beam , utility1);
+plot(users_per_Beam , utility2);
+xlabel('Users per Beam');
+ylabel('Sum Utility')
+legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(10),' deg'],['Phase uncertainty = ',num2str(15),' deg']);
+title('Utility versus users per beam');
+
+figure;
+hold on
+plot(users_per_Beam , sum_rate);
+plot(users_per_Beam , sum_rate1);
+plot(users_per_Beam , sum_rate2);
+xlabel('Users per Beam');
+ylabel('Sum Rate (bit/Hz)')
+legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(10),' deg'],['Phase uncertainty = ',num2str(15),' deg']);
+title('Sum rate versus users per beam');
+%result = optimization_outage(channel_Matrix,settings,7);
+
+figure;
+hold on;
+plot(users_per_Beam , mean_sum_rate);
+plot(users_per_Beam , mean_sum_rate1);
+plot(users_per_Beam , mean_sum_rate2);
+xlabel('Users per Beam');
+ylabel('Individual data rate (bit/Hz)')
+legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(10),' deg'],['Phase uncertainty = ',num2str(15),' deg']);
+title('Individual data rate versus users per beam');
+
+num_of_users1 = 7;
+num_of_users2 = 4;
+bar_result_1 = result(num_of_users1);
+bar_result_2 = result(num_of_users2);
+% figure;
+% hold on;
+% b = bar([bar_result_1.data_Rate',bar_result_2.data_Rate']);
+% label = num2cell(1:settings.num_of_Beams);
+% ch = get(b,'children');
+% set(gca,'XTickLabel',label)
+% xlabel('Beam index')
+% ylabel('Data Rate (bit/Hz)')
+% title('Individual data rate in each user group')
+% legend(['Users per beam = ',num2str(num_of_users1)] , ['Users per beam = ',num2str(num_of_users2)]);
+
+% figure;
+% hold on;
+% b = bar([bar_result_1.antenna_Power',bar_result_2.antenna_Power']);
+% label = num2cell(1:settings.num_of_Antenna);
+% ch = get(b,'children');
+% set(gca,'XTickLabel',label)
+% xlabel('Beam index')
+% ylabel('Power (Watt)')
+% title('Power distribution of each antenna')
+% legend(['Users per beam = ',num2str(num_of_users1)] , ['Users per beam = ',num2str(num_of_users2)]);
+
+% figure;
+% hold on;
+% b = bar([bar_result_1.antenna_Power',bar_result_2.antenna_Power']);
+% label = num2cell(1:settings.num_of_Antenna);
+% ch = get(b,'children');
+% set(gca,'XTickLabel',label)
+% xlabel('Beam index')
+% ylabel('Power (Watt)')
+% title('Power distribution of each antenna')
+% legend(['Users per beam = ',num2str(num_of_users1)] , ['Users per beam = ',num2str(num_of_users2)]);
+
+figure;
+hold on;
+b = bar([mean(bar_result_1.outage_Prob')',mean(bar_result_2.outage_Prob')']);
+label = num2cell(1:settings.num_of_Beams);
+ch = get(b,'children');
+set(gca,'XTickLabel',label)
+xlabel('Beam index')
+ylabel('Mean error probability')
+title('Mean error probability of each user group')
+legend(['Users per beam = ',num2str(num_of_users1)] , ['Users per beam = ',num2str(num_of_users2)]);
+
+% w_Unoptimized = ones(1 ,settings.num_of_Antenna)
+% W_Unoptimized = repmat(w_Unoptimized/norm(w_Unoptimized),settings.num_of_Beams,1) * sqrt(settings.power_per_Antenna)
+% unoptimized_Result.SINR = [];
+% unoptimized_Result.data_Rate = [];
+% for k = 1:settings.num_of_Beams
+%     w_k = W_Unoptimized(:,k);
+%     SINR_Beam = [];
+%     for q = 1:settings.users_per_Beam
+%        h = channel_Matrix(:,(k-1)*settings.users_per_Beam + q);
+%        signal_Power = square(norm(h' * w_k));
+%        interference_Power = 0;
+%        for l = 1:settings.num_of_Beams
+%          if l ~= k
+%            w_l = W_Unoptimized(:,l);
+%            interference_Power = interference_Power + square(norm(h' * w_l));
+%          end
+%        end   
+%     SINR_User = signal_Power / (interference_Power + settings.noise_Power);
+%     SINR_Beam = [SINR_Beam ; SINR_User];   
+%     end
+%     data_Rate = log2(1 + min(SINR_Beam));
+%     unoptimized_Result.SINR = [unoptimized_Result.SINR,SINR_Beam];
+%     unoptimized_Result.data_Rate = [unoptimized_Result.data_Rate , data_Rate];
+% end
+% 
+% unoptimized_Result.sum_Rate = sum(unoptimized_Result.data_Rate * settings.users_per_Beam);
+% 
+% figure
+% hold on;
