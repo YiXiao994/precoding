@@ -3,7 +3,8 @@ function [settings] = init_settings()
 %   
 settings.num_of_Beams = 7;
 settings.num_of_Antenna = 7;
-settings.users_per_Beam = 4;
+settings.selected_Users_per_Beam = 4;
+settings.users_per_Beam = settings.selected_Users_per_Beam * (settings.selected_Users_per_Beam + 1) / 2;
 settings.frequency = 28e9;  %% Hz
 settings.Boltzmann_Constant = 1.38e-23;
 settings.user_Link_Bandwidth = 50e6;  %% Hz
@@ -18,8 +19,8 @@ settings.cell_Radius = 250e3; %% meter
 settings.satellite_Height = 35800e3; %% meter
 settings.light_Speed = 2.99792458e8; %% m/s
 settings.earth_Radius = 6371e3; %% meter
-settings.noise_Power = 10 ^(0);  %% Normalized nois power
-settings.SINR_Threshold = [0.75,0.86,0.67,0.70,0.82,0.78,0.73]; %%SINR requirement for each user group
+settings.noise_Power = 10 ^(0);  %% Normalized noise power
+settings.SINR_Threshold = [0.65,0.96,0.67,0.70,0.62,0.78,0.73]; %%SINR requirement for each user group
 settings.outage_Probability = 0.10;
 
 end

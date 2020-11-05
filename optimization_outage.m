@@ -1,8 +1,6 @@
 function [result] = optimization_outage(channel_Matrix,settings,num_of_Users)
 %optimization
 % 
-[p,W_k] = precoding_outage(channel_Matrix, settings , num_of_Users);
-
 
 M = 1;
 R_sum_temp = 0;
@@ -43,6 +41,8 @@ for n1 = 1:settings.num_of_Antenna
   G = [G ; G_temp];
 end
 
+t1 = clock;
+[p,W_k] = precoding_outage(channel_Matrix, settings , num_of_Users);
 for m = 1:M
     V = [];
 
@@ -59,37 +59,13 @@ for m = 1:M
        variable t(settings.num_of_Beams , 1);
        variable P(settings.num_of_Beams,1);
        min_SINR_inversed = [];
-
-%        for k = 1:settings.num_of_Beams
-%            Beam_SINR = [];
-%            for q = 1:num_of_Users               
-%                h = channel_Matrix(:,(k-1)*num_of_Users + q);
-%                %signal_Power = P(k) * real(trace(diag(h)*A*diag(h')*V(:,k)*V(:,k)'));
-%                signal_Power = P(k) * real(trace(h * h' * V(:,k) * V(:,k)'));
-%                interference_Power = [];
-%                for l = 1:settings.num_of_Beams
-%                   if l ~= k
-%                      interference_Power =  [interference_Power; P(l) * real(trace(h * h' * V(:,l) * V(:,l)'))]; 
-%                   end
-%                end
-%                %user_SINR_changed = (signal_Power + sum(interference_Power) + settings.noise_Power )/ (sum(interference_Power) + settings.noise_Power);
-%                user_SINR_inversed = (sum(interference_Power) + settings.noise_Power)/ signal_Power ;
-%                Beam_SINR = [Beam_SINR ; user_SINR_inversed];                           
-%            end
-%            %min_SINR = [min_SINR , min(Beam_SINR)];
-%            min_SINR_inversed = [min_SINR_inversed , max(Beam_SINR)];
-%           % min_SINR = max(Beam_SINR);
-%            
-%            SINR = [SINR , Beam_SINR];
-%        end
-       %R_sum_approximate = sum( settings.SINR_Threshold .* log((1)./min_SINR_inversed));
-       R_sum_approximate = sum( settings.SINR_Threshold .* log(t' .* settings.SINR_Threshold));
-       maximize R_sum_approximate;
+       sum_utility = sum( settings.SINR_Threshold .* log(t' .* settings.SINR_Threshold));
+       maximize sum_utility;
               
        subject to
          for k = 1:settings.num_of_Beams
             0 <= P(k); 
-            1 <= t(k)
+            1 <= t(k);
            % P(k) <= 50;
             %t * settings.SINR_Threshold < min(SINR);
          end
@@ -146,10 +122,9 @@ for m = 1:M
            
          end 
     cvx_end
+    t2 = clock;
     %min_SINR = 1./ min_SINR_inversed;
     %min_SINR_inversed;
-    
-
     
     W = V .* sqrt(P);
     SINR = zeros(num_of_Users , settings.num_of_Beams);
@@ -200,8 +175,7 @@ for m = 1:M
            mu = real(trace(C*A));
            %v = norm(sqrtm(G)*vec(C'))- mu^2;
            v = real(sqrt((norm(sqrtm(G) * vec(C')))^2 - mu^2));
-           t(k) * settings.SINR_Threshold(k);
-           outage_Probability(k,q) = 0.5 + 0.5 * erf( (  mu - t(k) * settings.SINR_Threshold(k) ) / (v * sqrt(2)) ) 
+           outage_Probability(k,q) = 0.5 + 0.5 * erf( (  mu - t(k) * settings.SINR_Threshold(k) ) / (v * sqrt(2)) );
                                             
         end
         
@@ -213,10 +187,12 @@ for m = 1:M
            P_n_temp = P_Antenna;
            W_temp = W;
            data_Rate_temp = data_Rate;
-     
+           %jain_Index = square(sum(t' .* settings.SINR_Threshold)) / (settings.num_of_Beams * sum( square(t' .* settings.SINR_Threshold) ) ) ;
+           jain_Index = square(sum(min_SINR)) / (settings.num_of_Beams * sum( square(min_SINR ) ) );
      end
 %
- 
+ result.time = etime(t2 , t1);
+ result.jain_Index = jain_Index;
  result.outage_Threshold = t .* settings.SINR_Threshold;
  result.outage_Prob = outage_Probability;
  result.beam_power = P';

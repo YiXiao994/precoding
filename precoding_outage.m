@@ -1,12 +1,7 @@
 function [ratio,precoding_Result] = precoding_outage(channel_Matrix , settings , num_of_Users)
 %Precoding
 % 
-cvx_begin quiet sdp
-  variable W(settings.num_of_Antenna, settings.num_of_Antenna,settings.num_of_Beams) complex semidefinite;
-  power_Matrix = 0;
-  for k = 1:settings.num_of_Beams
-     power_Matrix = power_Matrix + W(:,:,k);
-  end
+
   A = [];
   a = [1];
 
@@ -39,8 +34,13 @@ cvx_begin quiet sdp
      end
      G = [G ; G_temp];
   end
-  
-  
+
+cvx_begin quiet sdp
+  variable W(settings.num_of_Antenna, settings.num_of_Antenna,settings.num_of_Beams) complex semidefinite;
+  power_Matrix = 0;
+  for k = 1:settings.num_of_Beams
+     power_Matrix = power_Matrix + W(:,:,k);
+  end
   variable p;
   minimize p;
   subject to
@@ -64,7 +64,7 @@ cvx_begin quiet sdp
            h = channel_Matrix(:,(k-1)*num_of_Users + q);
            C = diag(h) * Z * diag(h');
            mu = real(trace(C * A));
-           %sig_square = (vec(C.').' )
+           %sig_square = (vec(C.').')
            a = settings.SINR_Threshold(k) * settings.noise_Power;
            b = sqrt(2) * erfinv(1 - 2 * settings.outage_Probability);
            norm(sqrtm(G) * vec(C')) <= (1/b) * ( sqrt(b^2 + 1) * mu -  a/(sqrt(b^2 + 1)) );
@@ -87,14 +87,14 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
        for q = 1:num_of_Users 
            h = channel_Matrix(:,(k-1)*num_of_Users + q);
            C = diag(h) * Z * diag(h');
-           mu = real(trace(C * A))
+           mu = real(trace(C * A));
            %sig_square = (vec(C.').' )
-           v = sqrt((norm(sqrtm(G) * vec(C')))^2 - mu^2)
+           v = sqrt((norm(sqrtm(G) * vec(C')))^2 - mu^2);
            a = settings.SINR_Threshold(k) * settings.noise_Power;
            b = sqrt(2) * erfinv( 1 - 2 * settings.outage_Probability);
            %norm(sqrtm(G) * vec(C')) <= (1/b) * (a/(sqrt(b^2 + 1)) - sqrt(b^2 + 1) * real(mu)  );
            %prob = 0.5+ 0.5 * erf(( settings.SINR_Threshold(k)-mu)/(sqrt(2) * norm(sqrtm(G) * vec(C'))) )()^2- mu^2)
-           outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v))
+           outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v));
 
        end
     end
@@ -120,9 +120,7 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
        end
        min_SINR(k) = min(SINR(:,k));
     end
-    SINR
-    min_SINR
-outage_Probability
+
 ratio = p;
 precoding_Result = W;
 end

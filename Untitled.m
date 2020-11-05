@@ -1,7 +1,9 @@
-gpvar x y z;
-
-m = x + y + 2*z;
-
-constraints = [m <=x, z <= y, y/(x+z) >= 5];
-[obj_value, solution, status] = gpsolve(m,constraints);
-assign(solution);
+clear all;
+tic
+t1 = cputime
+i = 0
+for a = 1:100000
+   i = i + 1; 
+end
+t2 = cputime - t1
+toc
