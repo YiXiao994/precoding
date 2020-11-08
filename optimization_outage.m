@@ -104,7 +104,7 @@ for m = 1:M
                     %b = settings.outage_Ratio * settings.SINR_Threshold(k)*norm(sqrtm(G) * vec((diag(h)*v_l*v_l'*diag(h'))'));
                     b =  settings.SINR_Threshold(k)*norm(sqrtm(G) * vec((diag(h)*v_l*v_l'*diag(h'))'));
                     b_k = [b_k;b];
-                    left_hand = left_hand + (d - b) * P(l) * t(k);
+                    left_hand = left_hand + (d + b) * P(l) * t(k);
                 else
                     d_k = [d_k ; 0];
                     c_k = sqrt(n_k^2 + 1) * trace(real(diag(h)*v_k*v_k'*diag(h'))*A) / (n_k);
@@ -115,7 +115,7 @@ for m = 1:M
             c_k - a_k;
    
              %sum ((d_k - b_k).* P * t(k)) + e_k <= (c_k - a_k) * P(k);
-             left_hand + e_k <= (c_k - a_k) * P(k);
+             left_hand + e_k <= (c_k + a_k) * P(k);
              %end
              %norm(sqrtm(G) * vec(C)) <= (1/b) * (sqrt(b^2 + 1) * real(mu) - a/(sqrt(b^2 + 1)) );                       
            end
