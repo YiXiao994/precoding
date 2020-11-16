@@ -112,7 +112,6 @@ for m = 1:M
                     a_k = norm(sqrtm(G) * vec((diag(h)*v_k*v_k'*diag(h'))'));
                 end
              end
-            c_k - a_k;
    
              %sum ((d_k - b_k).* P * t(k)) + e_k <= (c_k - a_k) * P(k);
              left_hand + e_k <= (c_k + a_k) * P(k);
@@ -126,7 +125,7 @@ for m = 1:M
     %min_SINR = 1./ min_SINR_inversed;
     %min_SINR_inversed;
     
-    W = V .* sqrt(P);
+    W = V .* sqrt(P');
     SINR = zeros(num_of_Users , settings.num_of_Beams);
     min_SINR = zeros(1, settings.num_of_Beams);
     for k = 1:settings.num_of_Beams
@@ -193,7 +192,7 @@ for m = 1:M
 %
  result.time = etime(t2 , t1);
  result.jain_Index = jain_Index;
- result.outage_Threshold = t .* settings.SINR_Threshold;
+ result.outage_Threshold = t' .* settings.SINR_Threshold;
  result.outage_Prob = outage_Probability;
  result.beam_power = P';
  result.utility =  utility;

@@ -31,7 +31,7 @@ for num_of_Users = 1:settings.selected_Users_per_Beam
    H = [];
    for k = 1:settings.num_of_Beams
        begin_index = num_of_Users * (num_of_Users - 1) / 2  + 1;
-       H = [H,channel_Matrix(1:settings.num_of_Antenna,settings.users_per_Beam*(k-1)+begin_index:settings.users_per_Beam*(k-1)+(begin_index + num_of_Users - 1))];
+       H = [H,channel_Matrix(1:settings.num_of_Antenna, (settings.users_per_Beam*(k-1)+begin_index):(settings.users_per_Beam*(k-1)+(begin_index + num_of_Users - 1)))];
    end
    result_temp = optimization_outage(H,settings,num_of_Users);
    result = [result,result_temp];
