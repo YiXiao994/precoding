@@ -1,56 +1,34 @@
-function [result] = bench_mark(channel_Matrix, settings, num_of_Users)
-%bench_mark
+function [W] = precoding_bench_mark(channel_Matrix, settings, num_of_Users)
+% precoding_bench_mark
 %
-
-R_sum_temp = 0;
-SINR_temp = [];
-P_n_temp = [];
-W_temp = [];
-data_Rate_temp = [];
-
-
 C = (2 * pi * (settings.phase_Error_Standard_Deviation / 360))^2 * eye(settings.num_of_Antenna);
-W_opt = precoding_bench_mark(channel_Matrix, settings, num_of_Users);
-V = [];
-P_antenna = [];
-for k = 1:settings.num_of_Beams
-  [U,S] = schur(W_opt(:,:,k));
-  v_s = sqrt(1/2) * (randn(settings.num_of_Antenna , 1) + 1j * randn(settings.num_of_Antenna , 1));
-  w_k = U * sqrtm(S) * v_s;
-  v_k = w_k / norm(w_k);
-  V = [V,v_k];
-end
 
-SINR = [];
-precoding_Matrix = [];
-cvx_begin sdp
-variable P(1,settings.num_of_Beams);
+cvx_begin quiet sdp;
+
+variable W_opt(settings.num_of_Antenna, settings.num_of_Antenna,settings.num_of_Beams) complex semidefinite;
 variable t(settings.num_of_Beams, num_of_Users);
 expression f_X(settings.num_of_Antenna,settings.num_of_Antenna);
 expression g_Y(settings.num_of_Antenna,1);
 power_Matrix = 0;
 for k = 1:settings.num_of_Beams
-   v_k = V(:,k);
-   power_Matrix = power_Matrix + P(k) * v_k * v_k';
-
+   power_Matrix = power_Matrix + W_opt(:,:,k);
 end
-sum_power = trace(power_Matrix);
-minimize real(sum_power);
+
+sum_Power = trace(power_Matrix);
+minimize real(sum_Power);
 subject to
+
 for n = 1:settings.num_of_Antenna
-   P_antenna = [P_antenna,power_Matrix(n,n)];
    real (power_Matrix(n,n)) <= settings.power_per_Antenna;
    real (power_Matrix(n,n)) >= 0;
 end
 
 for k = 1:settings.num_of_Beams
-    v_k = V(:,k);
-    W_k = P(k)* v_k * v_k';
+    W_k = W_opt(:,:,k);
     W_l = 0;
     for l = 1:settings.num_of_Beams
       if l ~= k
-         v_l = V(:,l);
-         W_l = W_l + P(l) * v_l * v_l';
+         W_l = W_l + W_opt(:,:,l);
       end
     end
     for q = 1:num_of_Users
@@ -82,8 +60,7 @@ for k = 1:settings.num_of_Beams
     
 end
 cvx_end;
-P_antenna
-P
-result = sqrt(P) .* V ;
+
+W = W_opt;
 end
 
