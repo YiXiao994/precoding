@@ -94,7 +94,7 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
            b = sqrt(2) * erfinv( 1 - 2 * settings.outage_Probability);
            %norm(sqrtm(G) * vec(C')) <= (1/b) * (a/(sqrt(b^2 + 1)) - sqrt(b^2 + 1) * real(mu)  );
            %prob = 0.5+ 0.5 * erf(( settings.SINR_Threshold(k)-mu)/(sqrt(2) * norm(sqrtm(G) * vec(C'))) )()^2- mu^2)
-           outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v));
+           %outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v));
 
        end
     end

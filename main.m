@@ -33,8 +33,8 @@ for num_of_Users = 1:settings.selected_Users_per_Beam
        begin_index = num_of_Users * (num_of_Users - 1) / 2  + 1;
        H = [H,channel_Matrix(1:settings.num_of_Antenna, (settings.users_per_Beam*(k-1)+begin_index):(settings.users_per_Beam*(k-1)+(begin_index + num_of_Users - 1)))];
    end
-   result_temp = optimization_outage(H,settings,num_of_Users);
-   result = [result,result_temp];
+   %result_temp = optimization_outage(H,settings,num_of_Users);
+  % result = [result,result_temp];
 end
 
 settings.phase_Error_Standard_Deviation = 10;
@@ -44,8 +44,8 @@ for num_of_Users = 1:settings.selected_Users_per_Beam
        begin_index = num_of_Users * (num_of_Users - 1) / 2  + 1;
        H = [H,channel_Matrix(1:settings.num_of_Antenna,settings.users_per_Beam*(k-1)+begin_index:settings.users_per_Beam*(k-1)+(begin_index + num_of_Users - 1))];
    end
-   result_temp = optimization_outage(H,settings,num_of_Users);
-   result1 = [result1,result_temp];
+   %result_temp = optimization_outage(H,settings,num_of_Users);
+   %result1 = [result1,result_temp];
 end
 
 settings.phase_Error_Standard_Deviation = 15;
