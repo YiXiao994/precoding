@@ -17,6 +17,7 @@ for k = 1:settings.num_of_Beams
   [U,S] = schur(W_opt(:,:,k));
   v_s = sqrt(1/2) * (randn(settings.num_of_Antenna , 1) + 1j * randn(settings.num_of_Antenna , 1));
   w_k = U * sqrtm(S) * v_s;
+  %w_k = mvnrnd(zeros(settings.num_of_Antenna,1), W_opt(:,:,1)).';
   v_k = w_k / norm(w_k);
   V = [V,v_k];
 end
@@ -54,7 +55,11 @@ for k = 1:settings.num_of_Beams
       end
     end
     for q = 1:num_of_Users
+       
        h = channel_Matrix(:,(k-1)*num_of_Users + q);
+       %SINR = (h' * W_k * h)/(h' * W_l * h + 1);
+       %real(h' * W_k * h)>= settings.SINR_Threshold(k) * (real(h' * W_l * h) + 1);
+       %(h' * (W_k - settings.SINR_Threshold(k) * W_l )* h) >= settings.SINR_Threshold(k);
        Z = diag(h')*(W_k - settings.SINR_Threshold(k) * W_l)*diag(h);
        X = real(Z);
        Y = imag(Z);

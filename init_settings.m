@@ -20,7 +20,7 @@ settings.satellite_Height = 35800e3; %% meter
 settings.light_Speed = 2.99792458e8; %% m/s
 settings.earth_Radius = 6371e3; %% meter
 settings.noise_Power = 10 ^(0);  %% Normalized noise power
-settings.SINR_Threshold = [0.65,0.76,0.67,0.70,0.62,0.78,0.73]; %%SINR requirement for each user group
+settings.SINR_Threshold = [0.35,0.36,0.37,0.40,0.42,0.38,0.33]; %%SINR requirement for each user group
 settings.outage_Probability = 0.1;
 
 end
