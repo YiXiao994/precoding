@@ -3,19 +3,19 @@ function [ratio,precoding_Result] = precoding_outage(channel_Matrix , settings ,
 % 
 
   A = [];
-  a = [1];
+  a_m = [1];
 
   G2 = [];
   g2 = [exp( -( 2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
   
   for n = 2:settings.num_of_Antenna
-     a = [a , exp( -(2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
+     a_m = [a_m , exp( -(2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
      g2 = [g2 , exp( -2 * (2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
   end
   
   for n = 1:settings.num_of_Antenna
-     A = [A ; a];
-     a = circshift(a ,1);
+     A = [A ; a_m];
+     a_m = circshift(a_m ,1);
      G2 = [G2 ; g2];
      g2 = circshift(g2, 1);
   end
@@ -94,7 +94,7 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
            b = sqrt(2) * erfinv( 1 - 2 * settings.outage_Probability);
            %norm(sqrtm(G) * vec(C')) <= (1/b) * (a/(sqrt(b^2 + 1)) - sqrt(b^2 + 1) * real(mu)  );
            %prob = 0.5+ 0.5 * erf(( settings.SINR_Threshold(k)-mu)/(sqrt(2) * norm(sqrtm(G) * vec(C'))) )()^2- mu^2)
-           %outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v));
+           outage_Probability(k,q) = 0.5 + 0.5 * erf((mu -  settings.SINR_Threshold(k))/(sqrt(2)*v));
 
        end
     end
@@ -120,8 +120,10 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
        end
        min_SINR(k) = min(SINR(:,k));
     end
-
+SINR
+outage_Probability
 ratio = p;
 precoding_Result = W;
+
 end
 

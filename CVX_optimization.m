@@ -2,19 +2,19 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
 %CVX_optimization
 %  
   A = [];
-  a = [1];
+  a_m = [1];
 
   G2 = [];
   g2 = [exp( -( 2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
   
   for n = 2:settings.num_of_Antenna
-     a = [a , exp( -(2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
+     a_m = [a_m , exp( -(2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
      g2 = [g2 , exp( -2 * (2 * pi * settings.phase_Error_Standard_Deviation / 360)^2)];
   end
   
   for n = 1:settings.num_of_Antenna
-     A = [A ; a];
-     a = circshift(a ,1);
+     A = [A ; a_m];
+     a_m = circshift(a_m ,1);
      G2 = [G2 ; g2];
      g2 = circshift(g2, 1);
   end
@@ -52,7 +52,7 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
             h = channel_Matrix(:,(k-1)*num_of_Users + q);
             S(k,q) = real( h' * W_kk * h);
             I(k,q) = real( h' * W_ll * h) + 1;
-            obj = obj + (S(k,q) - SINR(k,q)* settings.SINR_Threshold(k) * I(k,q));
+            obj = obj + (S(k,q) - SINR(k,q)* I(k,q));
           end
         end
         
@@ -90,10 +90,10 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
            %sig_square = (vec(C.').')
              a = settings.SINR_Threshold(k) * settings.noise_Power;
              b = sqrt(2) * erfinv(1 - 2 * settings.outage_Probability);
-            % norm(sqrtm(G) * vec(C')) <= (1/b) * ( sqrt(b^2 + 1) * mu -  a/(sqrt(b^2 + 1)) );
+             norm(sqrtm(G) * vec(C')) <=  (1/b) * ( sqrt(b^2 + 1) * mu -  a/(sqrt(b^2 + 1)) );
            %norm(sqrtm(G) * vec(C')) <= (a - mu)/(b)
-             S(k,q) >= settings.SINR_Threshold(k) * I(k,q);
-
+            % S(k,q) >= settings.SINR_Threshold(k) * I(k,q);
+             %S(k,q) >= 0.01 * I(k,q);
           end
           end
      cvx_end
