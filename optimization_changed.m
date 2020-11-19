@@ -42,7 +42,7 @@ for m = 1:M
     P_cluster = zeros(settings.num_of_Beams , 1);
     P_cluster_next = zeros(settings.num_of_Beams , 1);
     SINR = zeros(settings.num_of_Beams , num_of_Users);
-    SINR1 = zeros(settings.num_of_Beams , num_of_Users);
+   % SINR1 = zeros(settings.num_of_Beams , num_of_Users);
       for k = 1:settings.num_of_Beams
         [U,S] = schur(W_opt(:,:,k));
 
@@ -51,11 +51,11 @@ for m = 1:M
         w_k = mvnrnd(zeros(settings.num_of_Antenna,1),W_opt(:,:,k)).';
         v_k = w_k / norm(w_k);
         V = [V,v_k];
-        P_cluster(k) = max( eig(W_opt(:,:,k) ) );
-
       end
       
+      W_init = V .* (sqrt( 0.3 * settings.power_per_Antenna)); 
       for k = 1:settings.num_of_Beams
+        P_cluster(k) = norm( W_init(:,k))^2;
         v_k = V(:,k);
         W_k =  P_cluster(k) * v_k * v_k';
         W_l = 0;
@@ -69,28 +69,68 @@ for m = 1:M
         end
         for q = 1:num_of_Users
           h = channel_Matrix(:,(k-1)*num_of_Users + q);
-          SINR1(k,q) = real(h' * W_opt(:,:,k)* h) / (1 + real(h' * W_opt_l * h));
           SINR(k,q) = real((h' * W_k * h)) / (real( h' * W_l * h) + 1);
         end
       end
     count = 0;
+    P_cluster
+    SINR
     while true
       
-       [P_cluster_next , SINR] = CVX_optimization(V,SINR1,settings , num_of_Users,channel_Matrix);
+       [P_cluster_next , SINR] = CVX_optimization(V,SINR,settings , num_of_Users,channel_Matrix);
        count = count + 1;
+       SINR
        if norm(P_cluster_next - P_cluster) <= 0.01
-           result = P_cluster_next;
+           P_cluster = P_cluster_next;
+           count
            break;
        end
        
-       if count >= 20
+       if count >= 50
           disp('Exceed the maximum iterative times.')
-          result = P_cluster_next;
+          P_cluster = P_cluster_next;
+          count
           break;
        end
        
        P_cluster = P_cluster_next;
     end
-       %result = P_cluster;
+    
+    W = sqrt(P_cluster') .* V;
+    cvx_begin
+    variable r(settings.num_of_Beams);
+    obj = 0;
+    for k = 1:settings.num_of_Beams
+        obj = obj + r(k) * settings.SINR_Threshold(k);
+    end
+    maximize obj
+    
+    subject to
+    
+    for k = 1:settings.num_of_Beams
+        W_k = W(:,k) * W(:,k)';
+        W_l = 0;
+        for l = 1:settings.num_of_Beams
+            if l ~= k
+                W_l = W_l + W(:,l) * W(:,l)';
+            end
+        end
+        
+        for q = 1:num_of_Users
+           h = channel_Matrix(:,(k-1)*num_of_Users + q);
+           Z_k = W_k - settings.SINR_Threshold(k) * r(k) * W_l;
+           C_k = diag(h) * Z_k * diag(h');
+           mu = real(trace(C_k * A));
+           a = r(k) * settings.SINR_Threshold(k) * settings.noise_Power;
+           b = sqrt(2) * erfinv( 1 - 2 * settings.outage_Probability);
+           norm(sqrtm(G) * vec(C_k')) <= (1/b) * ( sqrt(b^2 + 1) * mu -  a/(sqrt(b^2 + 1)) )
+        end
+    end
+    
+    cvx_end
+    
+    r;
+
+       
     end
 end
