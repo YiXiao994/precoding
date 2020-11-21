@@ -50,8 +50,10 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
           end
           for q = 1:num_of_Users
             h = channel_Matrix(:,(k-1)*num_of_Users + q);
-            S(k,q) = real( trace(diag(h) * A * diag(h') * W_kk ) );
-            I(k,q) = real( trace(diag(h) * A * diag(h') * W_ll) ) + 1;
+            %S(k,q) = real( trace(diag(h) * A * diag(h') * W_kk ) );
+            %I(k,q) = real( trace(diag(h) * A * diag(h') * W_ll) ) + 1;
+            S(k,q) = real(h' * W_kk * h);
+            I(k,q) = real(h' * W_ll * h) + 1;
             obj = obj + (S(k,q) - settings.SINR_Threshold(k) * SINR(k,q)* I(k,q));
           end
      end
@@ -65,9 +67,9 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
           P(k) >= 0
           W_kk =  P(k) * v_k * v_k';
           power_matrix = power_matrix + W_kk;
-          for q = 1:num_of_Users
-             S(k,q) >= settings.SINR_Threshold(k) * I(k,q); 
-          end
+           for q = 1:num_of_Users
+              S(k,q) >= settings.SINR_Threshold(k) * I(k,q); 
+           end
         end
         
         for n = 1:settings.num_of_Antenna

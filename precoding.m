@@ -1,4 +1,4 @@
-function [ratio,precoding_Result] = precoding(channel_Matrix , settings)
+function [ratio,W_opt] = precoding(channel_Matrix , settings, num_of_Users)
 %Precoding
 % 
 cvx_begin quiet sdp
@@ -17,8 +17,8 @@ cvx_begin quiet sdp
      real (power_Matrix(n,n)) >= 0;
     end
     for k = 1:settings.num_of_Beams
-       for q = 1:settings.users_per_Beam 
-           h = channel_Matrix(:,(k-1)*settings.users_per_Beam + q);
+       for q = 1:num_of_Users 
+           h = channel_Matrix(:,(k-1)*num_of_Users + q);
            R = h * h';
            signal_Power = trace(R*W(:,:,k));
            interference_Power = 0;
@@ -34,6 +34,6 @@ cvx_begin quiet sdp
     
 cvx_end
 ratio = p;
-precoding_Result = W;
+W_opt = W;
 end
 

@@ -75,7 +75,6 @@ sum_rate_mmse = [];
 jain_index = [];
 jain_index1 = [];
 jain_index2 = [];
-jain_index_mmse = [];
 time = [];
 time1 = [];
 time2 = [];
@@ -84,7 +83,6 @@ for i = users_per_Beam
    sum_rate = [sum_rate , result(i).sum_Rate];
    sum_rate_mmse = [sum_rate_mmse, result_mmse(i).sum_Rate];
    jain_index = [jain_index , result(i).jain_Index];
-   jain_index_mmse = [jain_index_mmse, result_mmse(i).jain_Index];
    mean_sum_rate = [mean_sum_rate , mean(result(i).data_Rate)];
 %   time = [time , result(i).time];
    utility1 = [utility1 , result1(i).utility];
@@ -117,7 +115,7 @@ plot(users_per_Beam, sum_rate_mmse);
 xlabel('Users per Beam');
 ylabel('Sum Rate (bit/Hz)')
 %legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
-legend(['Proposed algorithm'], ['MMSE']);
+legend(['MMSE'],['Proposed algorithm']);
 %result = optimization_outage(channel_Matrix,settings,7);
 
 figure;
@@ -132,14 +130,14 @@ legend(['Phase uncertainty = ',num2str(5),' deg'],['Phase uncertainty = ',num2st
 figure;
 hold on;
 plot(users_per_Beam , jain_index);
-plot(users_per_Beam, jain_index_mmse);
+plot(users_per_Be)
 %plot(users_per_Beam , jain_index1);
 %plot(users_per_Beam , jain_index2);
 
 xlabel('Users per Beam');
 ylabel('Jain''s Index')
 %legend(['Phase uncertainty = ',num2str(5),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
-legend(['Proposed algorithm'], ['MMSE'])
+legend(['Proposed algorithm', 'MMSE'])
 
 % figure;
 % hold on;

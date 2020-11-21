@@ -105,13 +105,13 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
        W_k = W(:,:,k);
        for q = 1:num_of_Users
            h = channel_Matrix(:,(k-1)*num_of_Users + q);
-           signal_power = real(trace(diag(h) * A * diag(h') * W_k));
+           signal_power = real(h' * W_k * h);
            interference_power = 0;
            
            for l = 1:settings.num_of_Beams
               if l ~= k
                  W_l = W(:,:,l);
-                 interference_power = interference_power +  real(trace(diag(h) * A * diag(h') * W_l));
+                 interference_power = interference_power +  real(h' * W_l * h);
                   
               end
            end
@@ -120,8 +120,8 @@ outage_Probability = zeros(settings.num_of_Beams , num_of_Users);
        end
        min_SINR(k) = min(SINR(:,k));
     end
-SINR
-outage_Probability
+SINR;
+outage_Probability;
 ratio = p;
 precoding_Result = W;
 
