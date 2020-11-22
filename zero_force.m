@@ -1,4 +1,4 @@
-function [result] = MMSE(channel_Matrix, settings, num_of_Users)
+function [result] = zero_force(channel_Matrix, settings, num_of_Users)
 %MMSE
 % 
 H_i = zeros(settings.num_of_Beams, settings.num_of_Antenna ,num_of_Users);
@@ -11,9 +11,9 @@ for q = 1:num_of_Users
    
 end
 H_hat = mean(H_i , 3);
-W_mmse = inv(H_hat' * H_hat + (1 / settings.power_per_Antenna) * eye(settings.num_of_Antenna) ) * H_hat';
-beta_mmse = sqrt(settings.power_per_Antenna * settings.num_of_Antenna / trace(W_mmse' * W_mmse));
-W = beta_mmse * W_mmse;
+W_zf = inv(H_hat' * H_hat ) * H_hat';
+beta_mmse = sqrt(settings.power_per_Antenna * settings.num_of_Antenna / trace(W_zf' * W_zf));
+W = beta_mmse * W_zf;
 
 SINR_real = zeros( num_of_Users , settings.num_of_Beams);
 data_rate_real = zeros(1 , settings.num_of_Beams);
@@ -41,9 +41,8 @@ for count = 1:settings.retry_count
        utility_real(q,k) = utility_real(q,k) + settings.SINR_Threshold(k) * log2(SINR_temp);
        sum_weighted_SINR = sum_weighted_SINR + SINR_temp / settings.SINR_Threshold(k);
        if SINR_temp < settings.SINR_Threshold(k)
-          outage_count(q,k) = outage_count(q,k) + 1; 
+         outage_count(q,k) = outage_count(q,k) + 1; 
        end
-       
     end    
   end
      

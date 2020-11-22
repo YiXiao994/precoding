@@ -28,6 +28,9 @@ result = [];
 result1 = [];
 result2 = [];
 result_mmse = [];
+result_zf = [];
+result2_mmse = [];
+result2_zf = [];
 for num_of_Users = 1:settings.selected_Users_per_Beam
    H = [];
    for k = 1:settings.num_of_Beams
@@ -36,8 +39,10 @@ for num_of_Users = 1:settings.selected_Users_per_Beam
    end
    result_temp = optimization_changed(H,settings,num_of_Users);
    result_mmse_temp = MMSE(H, settings, num_of_Users);
+   result_zf_temp = zero_force(H, settings, num_of_Users);
    result = [result,result_temp];
    result_mmse = [result_mmse, result_mmse_temp];
+   result_zf = [result_zf , result_zf_temp];
 end
 
 settings.phase_Error_Standard_Deviation = 15;
@@ -60,6 +65,10 @@ for num_of_Users = 1:settings.selected_Users_per_Beam
    end
    result_temp = optimization_changed(H,settings,num_of_Users);
    result2 = [result2,result_temp];
+   result_temp_mmse = MMSE(H,settings,num_of_Users);
+   result2_mmse = [result2_mmse,result_temp_mmse];
+   result_temp_zf = zero_force(H,settings,num_of_Users);
+   result2_zf = [result2_zf,result_temp_zf];
 end
 users_per_Beam = 1:settings.selected_Users_per_Beam;
 mean_sum_rate = [];
@@ -72,17 +81,35 @@ sum_rate1 = [];
 utility2 = [];
 sum_rate2 = [];
 sum_rate_mmse = [];
+sum_rate_zf = [];
+sum_weighted_SINR = [];
+sum_weighted_SINR_mmse = [];
+sum_weighted_SINR_zf = [];
 jain_index = [];
 jain_index1 = [];
 jain_index2 = [];
+jain_index_mmse = [];
+jain_index_zf = [];
 time = [];
 time1 = [];
 time2 = [];
+outage_probability = [];
+outage_probability_mmse = [];
+outage_probability_zf = [];
 for i = users_per_Beam
    utility = [utility , result(i).utility];
    sum_rate = [sum_rate , result(i).sum_Rate];
    sum_rate_mmse = [sum_rate_mmse, result_mmse(i).sum_Rate];
+   sum_rate_zf = [sum_rate_zf , result_zf(i).sum_Rate];
+   sum_weighted_SINR_temp = [result(i).sum_weighted_SINR];
+   sum_weighted_SINR_mmse_temp = [result_mmse(i).sum_weighted_SINR];
+   sum_weighted_SINR_zf_temp = [result_zf(i).sum_weighted_SINR];
+   sum_weighted_SINR = [sum_weighted_SINR, sum_weighted_SINR_temp];
+   sum_weighted_SINR_mmse = [sum_weighted_SINR_mmse, sum_weighted_SINR_mmse_temp];
+   sum_weighted_SINR_zf = [sum_weighted_SINR_zf, sum_weighted_SINR_zf_temp];
    jain_index = [jain_index , result(i).jain_Index];
+   jain_index_mmse = [jain_index_mmse, result_mmse(i).jain_Index];
+   jain_index_zf = [jain_index_zf , result_zf(i).jain_Index];
    mean_sum_rate = [mean_sum_rate , mean(result(i).data_Rate)];
 %   time = [time , result(i).time];
    utility1 = [utility1 , result1(i).utility];
@@ -95,6 +122,15 @@ for i = users_per_Beam
    mean_sum_rate2 = [mean_sum_rate2 , mean(result2(i).data_Rate)];
    jain_index2 = [jain_index2 , result2(i).jain_Index];
 %   time2 = [time2 , result2(i).time];
+   if i == 4
+       weighted_sum_SINR_iteration = result(i).weighted_sum_SINR_iteration;
+   end
+   outage_probability_temp = result2(i).outage_Prob;
+   outage_probability_temp_mmse = result2_mmse(i).outage_Prob;
+   outage_probability_temp_zf = result2_zf(i).outage_Prob;
+   outage_probability = [outage_probability , mean(vec(outage_probability_temp))];
+   outage_probability_mmse = [outage_probability_mmse , mean(vec(outage_probability_temp_mmse))];
+   outage_probability_zf = [outage_probability_zf , mean(vec(outage_probability_temp_zf))];
 end
 figure;
 hold on;
@@ -110,35 +146,65 @@ figure;
 hold on
 plot(users_per_Beam , sum_rate);
 plot(users_per_Beam, sum_rate_mmse);
+plot(users_per_Beam , sum_rate_zf)
 %plot(users_per_Beam , sum_rate1);
 %plot(users_per_Beam , sum_rate2);
 xlabel('Users per Beam');
 ylabel('Sum Rate (bit/Hz)')
 %legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
-legend(['MMSE'],['Proposed algorithm']);
+legend(['Proposed algorithm'], ['MMSE'],['ZF']);
 %result = optimization_outage(channel_Matrix,settings,7);
 
 figure;
-hold on;
-plot(users_per_Beam , mean_sum_rate);
-plot(users_per_Beam , mean_sum_rate1);
-plot(users_per_Beam , mean_sum_rate2);
+hold on
+plot(users_per_Beam , sum_weighted_SINR);
+plot(users_per_Beam, sum_weighted_SINR_mmse);
+plot(users_per_Beam , sum_weighted_SINR_zf);
+%plot(users_per_Beam , sum_rate1);
+%plot(users_per_Beam , sum_rate2);
 xlabel('Users per Beam');
-ylabel('Individual data rate (bit/Hz)')
+ylabel('Sum weighted SINR')
+%legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
+legend(['Proposed algorithm'], ['MMSE'],['ZF']);
+%result = optimization_outage(channel_Matrix,settings,7);
+figure;
+hold on
+plot(users_per_Beam , outage_probability);
+plot(users_per_Beam, outage_probability_mmse);
+plot(users_per_Beam , outage_probability_zf);
+%plot(users_per_Beam , sum_rate1);
+%plot(users_per_Beam , sum_rate2);
+xlabel('Users per Beam');
+ylabel('Outage Probability')
+%legend(['Phase uncertainty = ',num2str(2),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
+legend(['Proposed algorithm'], ['MMSE'],['ZF']);
+figure;
+hold on;
+plot(users_per_Beam , mean_sum_rate * settings.user_Link_Bandwidth / (10^9));
+plot(users_per_Beam , mean_sum_rate1 * settings.user_Link_Bandwidth / (10^9));
+plot(users_per_Beam , mean_sum_rate2 * settings.user_Link_Bandwidth / (10^9));
+xlabel('Users per Beam');
+ylabel('Individual data rate (Gb)')
 legend(['Phase uncertainty = ',num2str(5),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
 
 figure;
 hold on;
 plot(users_per_Beam , jain_index);
-plot(users_per_Be)
+plot(users_per_Beam, jain_index_mmse);
+plot(users_per_Beam, jain_index_zf)
 %plot(users_per_Beam , jain_index1);
 %plot(users_per_Beam , jain_index2);
 
 xlabel('Users per Beam');
 ylabel('Jain''s Index')
 %legend(['Phase uncertainty = ',num2str(5),' deg'],['Phase uncertainty = ',num2str(15),' deg'],['Phase uncertainty = ',num2str(30),' deg']);
-legend(['Proposed algorithm', 'MMSE'])
-
+legend(['Proposed algorithm'], ['MMSE'],['ZF'])
+count = 0:10;
+figure;
+hold on;
+plot(count, weighted_sum_SINR_iteration)
+xlabel('Iteration times')
+ylabel('Weighted sum SINR')
 % figure;
 % hold on;
 % plot(users_per_Beam , time);
