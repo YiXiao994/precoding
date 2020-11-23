@@ -1,4 +1,4 @@
-function [result] = optimization_changed(channel_Matrix,settings,num_of_Users)
+function [result] = optimization_changed1(channel_Matrix,settings,num_of_Users)
 %optimization
 % 
 [p,W_opt] = precoding_outage(channel_Matrix, settings , num_of_Users);
@@ -72,10 +72,15 @@ for m = 1:M
         end
       end
     %count = 0;
+%     if num_of_Users > 1
+%         SINR = min(SINR')';
+%         SINR = repmat(SINR , 1, num_of_Users);
+%     end
+    
     weighted_sum_SINR_iteration = sum(vec(settings.SINR_Threshold' .* SINR));
     for count = 1:10
       
-       [P_cluster_next , SINR] = CVX_optimization(V,SINR,settings , num_of_Users,channel_Matrix);
+       [P_cluster_next , SINR] = CVX_optimization1(V,SINR,settings , num_of_Users,channel_Matrix);
      %  count = count + 1;
 %        if norm(P_cluster_next - P_cluster) <= 0.01
 %            P_cluster = P_cluster_next;
@@ -88,6 +93,10 @@ for m = 1:M
        
        
        weighted_sum_SINR_iteration = [weighted_sum_SINR_iteration , weighted_sum ];
+%        if num_of_Users > 1
+%         SINR = min(SINR')';
+%         SINR = repmat(SINR , 1, num_of_Users);
+%        end
     end
     
     W = sqrt(P_cluster') .* V;

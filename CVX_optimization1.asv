@@ -1,4 +1,4 @@
-function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_of_Users, channel_Matrix)
+function [P_cluster_next , SINR_next] = CVX_optimization1(V,SINR ,settings , num_of_Users, channel_Matrix)
 %CVX_optimization
 %
   cvx_begin quiet
@@ -7,6 +7,7 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
      expression I(settings.num_of_Beams, num_of_Users)
      obj = 0;
      for k = 1:settings.num_of_Beams
+          obj_temp = [];
           v_k = V(:,k);
           W_kk =  P(k) * v_k * v_k';
           W_ll = 0;
@@ -22,7 +23,8 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
             %I(k,q) = real( trace(diag(h) * A * diag(h') * W_ll) ) + 1;
             S(k,q) = real(h' * W_kk * h);
             I(k,q) = real(h' * W_ll * h) + 1;
-            obj = obj + (S(k,q) - settings.SINR_Threshold(k) * SINR(k,q)* I(k,q));
+            obj_temp = [obj_temp , S(k,q) - settings.SINR_Threshold(k) * SINR(k,q)* I(k,q) ];
+            %obj = obj + (S(k,q) - settings.SINR_Threshold(k) * SINR(k,q)* I(k,q));
           end
      end
         
@@ -72,5 +74,3 @@ function [P_cluster_next , SINR_next] = CVX_optimization(V,SINR ,settings , num_
      cvx_end
        SINR_next = S ./ I;
        P_cluster_next = P;
-
-
